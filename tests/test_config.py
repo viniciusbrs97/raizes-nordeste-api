@@ -7,7 +7,6 @@ REQUIRED_ENV = {
     "DATABASE_URL": "postgresql+asyncpg://raizes:senha@localhost:5432/raizes_nordeste",
     "SECRET_KEY": "um-segredo-forte",
     "SUPER_ADMIN_EMAIL": "admin@raizes.com",
-    "SUPER_ADMIN_USERNAME": "admin",
     "SUPER_ADMIN_PASSWORD": "troque-essa-senha",
 }
 
@@ -29,7 +28,6 @@ def test_settings_loads_values_from_environment(monkeypatch):
 
     assert settings.secret_key == "um-segredo-forte"
     assert settings.super_admin_email == "admin@raizes.com"
-    assert settings.super_admin_username == "admin"
     assert settings.database_url.scheme == "postgresql+asyncpg"
 
 
@@ -47,6 +45,15 @@ def test_missing_required_variable_raises_validation_error(monkeypatch):
 
     with pytest.raises(ValidationError):
         Settings(_env_file=None)
+
+
+def test_database_dsn_returns_plain_connection_string(monkeypatch):
+    _set_required_env(monkeypatch)
+
+    settings = Settings(_env_file=None)
+
+    assert isinstance(settings.database_dsn, str)
+    assert settings.database_dsn == REQUIRED_ENV["DATABASE_URL"]
 
 
 def test_get_settings_returns_cached_instance(monkeypatch):

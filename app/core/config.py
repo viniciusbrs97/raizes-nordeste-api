@@ -20,7 +20,6 @@ class Settings(BaseSettings):
 
     # Super admin (credenciais-base)
     super_admin_email: EmailStr
-    super_admin_username: str
     super_admin_password: str
 
     model_config = SettingsConfigDict(
@@ -29,6 +28,11 @@ class Settings(BaseSettings):
         case_sensitive=False,
         extra="ignore",
     )
+
+    @property
+    def database_dsn(self) -> str:
+        """URL de conexão como string, pronta para o SQLAlchemy."""
+        return str(self.database_url)
 
 
 @lru_cache
