@@ -4,8 +4,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import TokenInvalido
+from app.core.service import SecurityService
 from app.domain.enums import PerfilUsuario
-from app.domain.service import SecurityService
 from app.infrastructure.database import get_db
 from app.models import Usuario
 
