@@ -1,11 +1,16 @@
 from decimal import Decimal
 
-from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.api.schemas.pedido import PedidoCreate
+from app.application.audit import registrar_auditoria
+from app.domain.exceptions import (
+    EstoqueInsuficiente,
+    ProdutoIndisponivel,
+    RecursoNaoEncontrado,
+)
 from app.models import ItemPedido, Pedido, ProdutoUnidade, Unidade
 
 
@@ -14,9 +19,7 @@ async def criar_pedido(
 ) -> Pedido:
     unidade = await session.get(Unidade, dados.unidade_id)
     if unidade is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Unidade não encontrada"
-        )
+        raise RecursoNaoEncontrado("Unidade não encontrada")
 
     itens: list[ItemPedido] = []
     valor_total = Decimal("0")
@@ -30,19 +33,16 @@ async def criar_pedido(
             .options(selectinload(ProdutoUnidade.produto))
         )
         if vinculo is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Produto {item.produto_id} não encontrado nesta unidade",
+            raise RecursoNaoEncontrado(
+                f"Produto {item.produto_id} não encontrado nesta unidade"
             )
         if not vinculo.is_available:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Produto {item.produto_id} indisponível nesta unidade",
+            raise ProdutoIndisponivel(
+                f"Produto {item.produto_id} indisponível nesta unidade"
             )
         if vinculo.quantidade_estoque < item.quantidade:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail=f"Estoque insuficiente para o produto {item.produto_id}",
+            raise EstoqueInsuficiente(
+                f"Estoque insuficiente para o produto {item.produto_id}"
             )
 
         preco_unitario = vinculo.produto.preco_base
@@ -64,6 +64,15 @@ async def criar_pedido(
         itens=itens,
     )
     session.add(pedido)
+    await session.flush()
+    await registrar_auditoria(
+        session,
+        cliente_id,
+        "PEDIDO_CRIADO",
+        "pedido",
+        pedido.id,
+        detalhe=f"canal={dados.canal_pedido.value} valor_total={valor_total}",
+    )
     await session.commit()
     await session.refresh(pedido, ["itens"])
     return pedido

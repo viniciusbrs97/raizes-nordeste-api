@@ -16,7 +16,12 @@ PRODUTOS = [
     ("Tapioca", Decimal("10.00"), True),
     ("Bolo de macaxeira", Decimal("12.00"), True),
     ("Bode guisado", Decimal("35.00"), False),
+    ("Item teste - recusa", Decimal("0.13"), True),
+    ("Item teste - gateway fora", Decimal("0.99"), True),
 ]
+
+CLIENTE_DEMO_EMAIL = "cliente@raizes.com"
+CLIENTE_DEMO_SENHA = "cliente123"
 
 
 async def seed_super_admin(session: AsyncSession) -> bool:
@@ -33,6 +38,26 @@ async def seed_super_admin(session: AsyncSession) -> bool:
             email=settings.super_admin_email,
             senha_hash=SecurityService.hash_senha(settings.super_admin_password),
             perfil=PerfilUsuario.SUPER_ADMIN,
+            ativo=True,
+        )
+    )
+    await session.commit()
+    return True
+
+
+async def seed_cliente_demo(session: AsyncSession) -> bool:
+    ja_existe = await session.scalar(
+        select(Usuario).where(Usuario.email == CLIENTE_DEMO_EMAIL)
+    )
+    if ja_existe is not None:
+        return False
+
+    session.add(
+        Usuario(
+            nome="Cliente Demo",
+            email=CLIENTE_DEMO_EMAIL,
+            senha_hash=SecurityService.hash_senha(CLIENTE_DEMO_SENHA),
+            perfil=PerfilUsuario.CLIENTE,
             ativo=True,
         )
     )
@@ -99,8 +124,10 @@ async def _imprimir_ids(session: AsyncSession) -> None:
 async def _run() -> None:
     async with async_session() as session:
         criado = await seed_super_admin(session)
+        await seed_cliente_demo(session)
         await seed_dados_apoio(session)
         print("super_admin criado" if criado else "super_admin ja existe")
+        print(f"cliente demo: {CLIENTE_DEMO_EMAIL} / {CLIENTE_DEMO_SENHA}")
         print("dados de apoio: unidade + produtos + estoque (idempotente)")
         await _imprimir_ids(session)
     await engine.dispose()
