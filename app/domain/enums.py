@@ -42,3 +42,8 @@ class TipoMovimentacaoPontos(StrEnum):
     DEBITO = "debito"
     ESTORNO = "estorno"
     EXPIRACAO = "expiracao"
+
+
+class TipoMovimentacaoEstoque(StrEnum):
+    ENTRADA = "entrada"
+    SAIDA = "saida"

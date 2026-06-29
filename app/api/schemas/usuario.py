@@ -15,7 +15,20 @@ class UsuarioCreate(BaseModel):
 
 
 class UsuarioRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+        json_schema_extra={
+            "example": {
+                "id": 1,
+                "nome": "Cliente Demo",
+                "email": "cliente@raizes.com",
+                "perfil": "cliente",
+                "unidade_id": None,
+                "ativo": True,
+                "created_at": "2026-06-29T01:35:13Z",
+            }
+        },
+    )
 
     id: int
     nome: str

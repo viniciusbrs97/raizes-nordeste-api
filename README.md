@@ -107,6 +107,48 @@ uv run uvicorn app.main:app --reload
 
 Login: `POST /auth/login` (form `username` + `password`) → retorna `access_token` (Bearer).
 
+## Documentação da API (Swagger / OpenAPI)
+
+Com a API rodando, a documentação interativa é gerada automaticamente (OpenAPI 3.1):
+
+- **Swagger UI:** http://localhost:8000/docs
+- **ReDoc:** http://localhost:8000/redoc
+- **Esquema OpenAPI (JSON):** http://localhost:8000/openapi.json
+
+Cada endpoint traz **título, descrição, exemplos de request/response** e os **códigos de erro** que pode retornar. Toda resposta de erro segue o mesmo envelope, com o header `X-Request-ID` para rastreabilidade:
+
+```json
+{
+  "error": "recurso-nao-encontrado",
+  "message": "Pedido não encontrado",
+  "details": [],
+  "timestamp": "2026-06-29T01:35:13Z",
+  "path": "/pedidos/1",
+  "requestId": "9d1a50f4-a332-4e37-aa41-afdfb26eca5e"
+}
+```
+
+### Autenticar no Swagger
+
+1. Abra **`POST /auth/login`** → *Try it out* → preencha `username` (e-mail) e `password` → *Execute*.
+2. Copie o `access_token` da resposta.
+3. Clique em **Authorize** (cadeado, topo direito), cole o token e confirme. As rotas protegidas passam a enviar o `Bearer` automaticamente.
+
+### Endpoints
+
+| Tag | Método | Rota | Descrição |
+|-----|--------|------|-----------|
+| auth | POST | `/auth/login` | Autenticar (login) → JWT |
+| auth | GET | `/auth/me` | Dados do usuário autenticado |
+| cardapio | GET | `/unidades/{id}/cardapio` | Cardápio da unidade (só disponíveis) |
+| pedidos | POST | `/pedidos` | Criar pedido |
+| pedidos | GET | `/pedidos` | Listar pedidos (filtro + paginação) |
+| pedidos | GET | `/pedidos/{id}` | Consultar pedido |
+| pedidos | PATCH | `/pedidos/{id}/status` | Atualizar status (máquina de estados) |
+| pedidos | POST | `/pedidos/{id}/pagamento` | Pagar pedido (gateway mock) |
+| estoque | POST | `/unidades/{id}/produtos/{id}/estoque` | Entrada/saída de estoque |
+| health | GET | `/health` | Healthcheck |
+
 ## Testando com Postman
 
 1. Importe o arquivo `docs/postman/raizes-nordeste.postman_collection.json` no Postman.
