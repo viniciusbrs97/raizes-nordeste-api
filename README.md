@@ -163,16 +163,34 @@ Sentinelas do pagamento mockado (peça quantidade 1):
 ## Estrutura do projeto
 
 
+```
 app/
-├── api/            # routers (health, auth, pedidos), schemas, dependencies, exception handlers
-├── application/    # use cases (criar/pagar/atualizar status), helpers (estoque, audit)
-├── core/           # config (.env) e segurança (JWT, bcrypt, SecurityService)
-├── domain/         # enums, exceptions de domínio, máquina de estados (transições)
-├── infrastructure/ # engine/session async e mock de pagamento
-├── models/         # models SQLAlchemy
-└── main.py         # instancia o FastAPI e registra routers/handlers
-migrations/         # Alembic
-scripts/seed.py     # seed idempotente
+├── api/                         # camada HTTP (FastAPI)
+│   ├── health.py                # GET /health
+│   ├── auth.py                  # POST /auth/login, GET /auth/me
+│   ├── pedidos.py               # criar, listar, consultar, pagar e mudar status
+│   ├── cardapio.py              # GET cardápio por unidade
+│   ├── estoque.py               # entrada/saída de estoque
+│   ├── dependencies.py          # get_current_user, require_role
+│   ├── middleware.py            # X-Request-ID por requisição
+│   ├── exception_handlers.py    # envelope de erro padrão
+│   └── schemas/                 # Pydantic (auth, usuario, pedido, cardapio, estoque, erro)
+├── application/                 # regras de aplicação
+│   ├── use_cases/               # criar_pedido, pagar_pedido, atualizar_status_pedido, movimentar_estoque
+│   ├── audit.py                 # registro de auditoria
+│   └── estoque.py               # restauração de estoque
+├── core/                        # config (.env) e segurança (JWT, bcrypt, SecurityService)
+├── domain/                      # enums, exceptions de domínio, máquina de estados (transicoes)
+├── infrastructure/              # engine/session async (database) e mock de pagamento (payment)
+├── models/                      # models SQLAlchemy (9 entidades + base/mixins)
+└── main.py                      # instancia o FastAPI: middlewares, handlers e routers
+migrations/                      # Alembic (env.py + versions/)
+scripts/seed.py                  # seed idempotente (super_admin, cliente demo, unidade/produtos)
+docs/
+├── postman/                     # coleção Postman auto-validável
+├── casos-de-uso.md              # diagrama PlantUML + descrições dos casos de uso
+└── requisitos-reconciliados.txt # requisitos (RF/RNF) com status
+```
 
 
 ## Comandos úteis
